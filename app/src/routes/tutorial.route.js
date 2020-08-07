@@ -1,5 +1,5 @@
-
 const tutorials = require("../controllers/tutorial.controller.js");
+const comments = require("../controllers/comment.controller.js");
 
 const router = require("express").Router();
 
@@ -23,5 +23,8 @@ router.delete("/:id", tutorials.delete);
 
 // Create a new Tutorial
 router.delete("/", tutorials.deleteAll);
+
+// Create comment for given tutorial
+router.post("/:id/comments", comments.create);
 
 module.exports = router;
