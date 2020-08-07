@@ -8,13 +8,11 @@ class ErrorHandler extends Error {
 
 const handleError = (err, res) => {
     let { statusCode, message } = err;
-    // Defaults error 
-    if (statusCode === undefined) statusCode = 500;
-    if (message === undefined) message = "Unhandled service error";
+    
     res.status(statusCode).json({
         status: "error",
-        statusCode,
-        message
+        statusCode: statusCode || 500,
+        message: message || "Unhandled service error"
     });
 };
 

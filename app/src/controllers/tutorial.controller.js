@@ -1,16 +1,14 @@
 const db = require("../models");
 const Tutorial = db.tutorials;
 const Op = db.Sequelize.Op;
+const { ErrorHandler } = require('../helpers/errors.helper');
 
 // Create and Save a new Tutorial
-exports.create = async (req, res) => {
+exports.create = async (req, res, next) => {
     try {
         // Validate request
         if (!req.body.title) {
-            res.status(400).send({
-                message: "Content can not be empty!"
-            });
-            return;
+            throw new ErrorHandler(400, "Content can not be empty!")
         }
 
         // Create a Tutorial
@@ -21,12 +19,9 @@ exports.create = async (req, res) => {
         };
 
         const response = await Tutorial.create(tutorial);
-        res.json(response)
+        res.status(201).json(response)
     } catch (err) {
-        res.status(500).send({
-            message:
-                err.message || "Some error occurred while creating the Tutorial."
-        });
+        next(err)
     }
 };
 
@@ -39,10 +34,7 @@ exports.findAll = async (req, res) => {
         const response = await Tutorial.findAll({ where: condition });
         res.json(response)
     } catch (err) {
-        res.status(500).send({
-            message:
-                err.message || "Some error occurred while retrieving tutorials."
-        });
+        next(err)
     }
 };
 
@@ -51,91 +43,66 @@ exports.findOne = async (req, res) => {
     try {
         const id = req.params.id;
 
-        const response = Tutorial.findByPk(id)
+        const response = await Tutorial.findByPk(id)
+        console.log(response)
         res.json({ response })
     } catch (err) {
-        res.status(500).send({
-            message: "Error retrieving Tutorial with id=" + id
-        });
+        next(err)
     }
 };
 
 // Update a Tutorial by the id in the request
-exports.update = (req, res) => {
-    const id = req.params.id;
+exports.update = async (req, res) => {
+    try {
+        const id = req.params.id;
 
-    Tutorial.update(req.body, {
-        where: { id: id }
-    })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    message: "Tutorial was updated successfully."
-                });
-            } else {
-                res.send({
-                    message: `Cannot update Tutorial with id=${id}. Maybe Tutorial was not found or req.body is empty!`
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Error updating Tutorial with id=" + id
-            });
-        });
+        const response = await Tutorial.update(req.body, { where: { id: id } })
+
+        if (response == 1) {
+            res.status(204).json({message: "Tutorial was updated successfully."});
+        } else {
+            throw new ErrorHandler(400, `Cannot update Tutorial with id=${id}.`)
+        }
+    } catch (err) {
+        next(err)
+    }
 };
-// Delete a Tutorial with the specified id in the request
-exports.delete = (req, res) => {
-    const id = req.params.id;
 
-    Tutorial.destroy({
-        where: { id: id }
-    })
-        .then(num => {
-            if (num == 1) {
-                res.send({
-                    message: "Tutorial was deleted successfully!"
-                });
-            } else {
-                res.send({
-                    message: `Cannot delete Tutorial with id=${id}. Maybe Tutorial was not found!`
-                });
-            }
-        })
-        .catch(err => {
-            res.status(500).send({
-                message: "Could not delete Tutorial with id=" + id
-            });
-        });
+// Delete a Tutorial with the specified id in the request
+exports.delete = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const response = await Tutorial.destroy({ where: { id: id } })
+        if (response == 1) {
+            res.status(204).json({message: "Tutorial was deleted successfully."});
+        } else {
+            throw new ErrorHandler(400, `Cannot delete Tutorial with id=${id}.`)
+        }
+    } catch (err) {
+        next(err)
+    }
 };
 
 // Delete all Tutorials from the database.
-exports.deleteAll = (req, res) => {
-    Tutorial.destroy({
-        where: {},
-        truncate: false
-    })
-        .then(nums => {
-            res.send({ message: `${nums} Tutorials were deleted successfully!` });
+exports.deleteAll = async (req, res) => {
+    try {
+        const response = await Tutorial.destroy({
+            where: {},
+            truncate: false
         })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while removing all tutorials."
-            });
-        });
+        res.status(204).json({ message: `${response} Tutorials were deleted successfully!` });
+    } catch (err) {
+        next(err)
+    }
 };
 
 // Find all published Tutorials
-exports.findAllPublished = (req, res) => {
-    Tutorial.findAll({ where: { published: true } })
-        .then(data => {
-            res.send(data);
-        })
-        .catch(err => {
-            res.status(500).send({
-                message:
-                    err.message || "Some error occurred while retrieving tutorials."
-            });
-        });
+exports.findAllPublished = async (req, res) => {
+    try {
+        const response = await Tutorial.findAll({ where: { published: true } });
+        res.json({ data: response })
+    } catch (err) {
+        next(err)
+    }
 };

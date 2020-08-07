@@ -2,6 +2,8 @@ const express = require('express');
 const Sequelize = require('sequelize');
 const cors = require('cors')
 
+const { handleError } = require('./src/helpers/errors.helper');
+
 const app = express();
 app.use(express.json())
 
